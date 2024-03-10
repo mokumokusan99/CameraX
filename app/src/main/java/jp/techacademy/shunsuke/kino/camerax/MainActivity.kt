@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraControl: CameraControl
     private lateinit var cameraSelector: CameraSelector
 
+    private lateinit var camera: Camera
     private lateinit var torchButton: ImageView
 
 
@@ -186,9 +187,24 @@ class MainActivity : AppCompatActivity() {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
-/*
+
     // Toggle torch on/off when button is clicked
     fun toggleTorch(view: View) {
+        val cameraControl = camera.cameraControl
+        val cameraInfo = CameraInfo
+
+        val torchState = cameraInfo.torchState.value?: TorchState.OFF
+        camera.cameraControl.enableTorch(torchState == TorchState.OFF)
+
+        if (torchState == 0) {
+            torchButton.setImageResource(R.drawable.baseline_flashlight_off_24) // OFFのアイコン
+        } else {
+            torchButton.setImageResource(R.drawable.baseline_flashlight_on_24) // ONのアイコン
+        }
+
+    }
+ /*
+   fun toggleTorch(view: View) {
         try {
             val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
             cameraProviderFuture.addListener({
@@ -218,8 +234,8 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
-
 */
+
 
 
     override fun onDestroy() {
