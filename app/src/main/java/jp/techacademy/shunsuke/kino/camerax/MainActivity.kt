@@ -21,17 +21,18 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.camera.core.*
-import androidx.camera.core.CameraInfoUnavailableException
+import androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.MediaStoreOutputOptions
 import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
 import androidx.camera.video.VideoRecordEvent
+import androidx.camera.view.PreviewView
 import androidx.core.content.PermissionChecker
+import androidx.lifecycle.LifecycleOwner
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
-//import kotlin.coroutines.jvm.internal.CompletedContinuation.context
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -43,23 +44,24 @@ class MainActivity : AppCompatActivity() {
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
 
+    private lateinit var torchButton: ImageView
+
     private lateinit var cameraExecutor: ExecutorService
 
     private lateinit var cameraProvider: ProcessCameraProvider
-    private lateinit var cameraControl: CameraControl
-    private lateinit var cameraSelector: CameraSelector
+
+    private var torchState: TorchState? = null
+
+    private var cameraControl: CameraControl? = null
+
 
     private lateinit var camera: Camera
-    private lateinit var torchButton: ImageView
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-        setContentView(R.layout.activity_main)
-
 
         // Request camera permissions
         if (allPermissionsGranted()) {
@@ -70,10 +72,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Set up the listeners for take photo and video capture buttons
-        //viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
-        //viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
+       // viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
+       // viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
 
         // ImageViewを初期化
         torchButton = findViewById(R.id.torchButton)
@@ -81,77 +81,31 @@ class MainActivity : AppCompatActivity() {
         torchButton.setImageResource(R.drawable.baseline_flashlight_off_24)
 
 
-
+        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+        requestCode: Int, permissions: Array<String>, grantResults:
+        IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera()
             } else {
-                Toast.makeText(
-                    this,
+                Toast.makeText(this,
                     "Permissions not granted by the user.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    private fun takePhoto() {
-        // Get a stable reference of the modifiable image capture use case
-        val imageCapture = imageCapture ?: return
-
-        // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
-            }
-        }
-
-        // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
-            .build()
-
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
-        imageCapture.takePicture(
-            outputOptions,
-            ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                }
-
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
-                }
-            }
-        )
-    }
+    private fun takePhoto() {}
 
     private fun captureVideo() {}
-//カメラのプレビュー起動
+
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
-
 
         cameraProviderFuture.addListener({
             // Used to bind the lifecycle of cameras to the lifecycle owner
@@ -175,66 +129,67 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview)
 
+                cameraControl = camera.cameraControl
+                toggleTorchState()
+
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
-
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
+/*
+    private fun initializeCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            cameraProvider = cameraProviderFuture.get()
 
-    // Toggle torch on/off when button is clicked
+            //Set up the camera selector (you can choose front or back camera)
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            // Set up the ImageCapture use case
+            val viewFinder: PreviewView = findViewById(R.id.viewFinder)
+
+            imageCapture = ImageCapture.Builder()
+                .setTargetRotation(viewFinder.display.rotation)
+                .build()
+
+            // Bind the use cases to the lifecycle
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    this as LifecycleOwner,
+                    cameraSelector,
+                    imageCapture
+                )
+            } catch (e: Exception) {
+                // Handle any errors
+                e.printStackTrace()
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+*/
+    // Toggle torch state
     fun toggleTorch(view: View) {
-        val cameraControl = camera.cameraControl
-        val cameraInfo = CameraInfo
+        val currentTorchState = torchState ?: TorchState.OFF
+        val newTorchState = if (currentTorchState == TorchState.OFF) TorchState.ON else TorchState.OFF
+        camera.cameraControl.enableTorch(newTorchState == TorchState.ON)
 
-        val torchState = cameraInfo.torchState.value?: TorchState.OFF
-        camera.cameraControl.enableTorch(torchState == TorchState.OFF)
 
-        if (torchState == 0) {
+
+        if (newTorchState == TorchState.OFF) {
             torchButton.setImageResource(R.drawable.baseline_flashlight_off_24) // OFFのアイコン
         } else {
             torchButton.setImageResource(R.drawable.baseline_flashlight_on_24) // ONのアイコン
         }
-
+        torchState = newTorchState as TorchState
     }
- /*
-   fun toggleTorch(view: View) {
-        try {
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-                val cameraControlFuture = cameraProvider.bindToLifecycle(this, cameraSelector)
-                cameraControlFuture.addListener(Runnable {
-                    try {
-                        val cameraControl = cameraControlFuture.get()
-
-                        val torchState = cameraControl.torchState.value ?: false
-                        cameraControl.enableTorch(!torchState)
-
-                        // トーチライトの状態に応じてImageViewの画像を切り替え
-                        if (torchState) {
-                            torchButton.setImageResource(R.drawable.baseline_flashlight_off_24) // OFFのアイコン
-                        } else {
-                            torchButton.setImageResource(R.drawable.baseline_flashlight_on_24) // ONのアイコン
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }, ContextCompat.getMainExecutor(this))
-            }, ContextCompat.getMainExecutor(this))
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-*/
 
 
 
@@ -257,6 +212,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }.toTypedArray()
     }
-
 }
 
