@@ -10,20 +10,63 @@
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent">
 
     </androidx.camera.view.PreviewView>
 
     <ImageView
         android:id="@+id/torchButton"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:onClick="toggleTorch"
         android:src="@drawable/baseline_flashlight_off_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="@android:color/holo_orange_light"
         tools:ignore="ContentDescription,ImageContrastCheck" />
+
+    <ImageView
+        android:id="@+id/reductionImageView"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="550dp"
+        android:background="#DDDDDD"
+        android:src="@drawable/baseline_remove_circle_outline_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/viewFinder"
+        app:tint="@android:color/black"
+        tools:ignore="ContentDescription,MissingConstraints" />
+
+
+    <SeekBar
+        android:id = "@+id/seekBar"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="610dp"
+        android:max = "100"
+        android:progress = "0"
+        android:background="#DDDDDD"
+        app:layout_constraintBottom_toTopOf="@+id/torchButton"
+        app:layout_constraintEnd_toStartOf="@+id/expansionImageView"
+        app:layout_constraintStart_toEndOf="@+id/reductionImageView"
+        app:layout_constraintTop_toTopOf="@+id/viewFinder"
+        tools:ignore="MissingConstraints" />
+
+    <ImageView
+        android:id="@+id/expansionImageView"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="550dp"
+        android:background="#DDDDDD"
+        android:src="@drawable/baseline_add_circle_outline_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/viewFinder"
+        app:tint="@android:color/black"
+        tools:ignore="ContentDescription,ImageContrastCheck,MissingConstraints" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/vertical_centerline"

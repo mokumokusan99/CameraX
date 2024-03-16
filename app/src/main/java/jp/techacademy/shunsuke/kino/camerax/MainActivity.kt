@@ -20,6 +20,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import android.widget.SeekBar
 import androidx.camera.core.*
 import androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
 import androidx.camera.video.FallbackStrategy
@@ -50,9 +51,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var cameraProvider: ProcessCameraProvider
 
-    private var torchState: TorchState? = null
+    private var torchState = TorchState.OFF
 
-    private var cameraControl: CameraControl? = null
+  //  private var cameraControl: CameraControl? = null
 
 
     private lateinit var camera: Camera
@@ -79,6 +80,9 @@ class MainActivity : AppCompatActivity() {
         torchButton = findViewById(R.id.torchButton)
         // 初期状態はOFFのアイコンを設定
         torchButton.setImageResource(R.drawable.baseline_flashlight_off_24)
+
+        val seekBar = findViewById<SeekBar>(R.id.seekBar)
+        seekBar.progress = 0
 
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -126,54 +130,43 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.unbindAll()
 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview)
 
-                cameraControl = camera.cameraControl
-                toggleTorchState()
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
+
+        // プレビュー画面を拡大する関数
+        fun zoomInPreview(scaleFactor: Float) {
+            viewBinding.viewFinder.scaleX = scaleFactor
+            viewBinding.viewFinder.scaleY = scaleFactor
+        }
+
+        // SeekBarのリスナーを設定
+        val seekBar = findViewById<SeekBar>(R.id.seekBar)
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                // プレビュー画面を拡大する処理
+                val scale = 1.0f + progress / 100.0f // 拡大倍率
+                zoomInPreview(scale)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
-/*
-    private fun initializeCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            cameraProvider = cameraProviderFuture.get()
 
-            //Set up the camera selector (you can choose front or back camera)
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            // Set up the ImageCapture use case
-            val viewFinder: PreviewView = findViewById(R.id.viewFinder)
-
-            imageCapture = ImageCapture.Builder()
-                .setTargetRotation(viewFinder.display.rotation)
-                .build()
-
-            // Bind the use cases to the lifecycle
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    this as LifecycleOwner,
-                    cameraSelector,
-                    imageCapture
-                )
-            } catch (e: Exception) {
-                // Handle any errors
-                e.printStackTrace()
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
-*/
     // Toggle torch state
     fun toggleTorch(view: View) {
         val currentTorchState = torchState ?: TorchState.OFF
@@ -187,7 +180,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             torchButton.setImageResource(R.drawable.baseline_flashlight_on_24) // ONのアイコン
         }
-        torchState = newTorchState as TorchState
+        torchState = newTorchState
     }
 
 
