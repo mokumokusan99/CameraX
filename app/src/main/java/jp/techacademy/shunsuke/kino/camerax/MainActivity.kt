@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var camera: Camera
 
-    private var isPlaying: Boolean = false
+    private var isPlaying: Boolean = true
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,7 +122,6 @@ class MainActivity : AppCompatActivity() {
     private fun startPreview() {
 
         val preview = findViewById<PreviewView>(R.id.viewFinder)
-        imageView.setImageBitmap(preview.bitmap)
 
         preview.visibility = View.VISIBLE
         imageView.visibility = View.GONE
@@ -132,6 +131,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun stopPreview() {
         val preview = findViewById<PreviewView>(R.id.viewFinder)
+        imageView.setImageBitmap(preview.bitmap)
 
         preview.visibility = View.GONE
         imageView.visibility = View.VISIBLE

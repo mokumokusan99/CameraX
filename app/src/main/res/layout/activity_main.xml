@@ -69,7 +69,7 @@
         android:max = "100"
         android:progress = "0"
         android:background="#DDDDDD"
-        android:thumb="@drawable/thumb"
+        android:thumb="@drawable/baseline_zoom_in_24"
         app:layout_constraintEnd_toStartOf="@+id/expansionImageView"
         app:layout_constraintStart_toEndOf="@+id/reductionImageView"
         app:layout_constraintTop_toTopOf="@+id/viewFinder"
