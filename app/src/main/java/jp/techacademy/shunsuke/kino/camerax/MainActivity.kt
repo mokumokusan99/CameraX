@@ -23,6 +23,7 @@ import android.widget.SeekBar
 import androidx.camera.core.*
 import java.nio.ByteBuffer
 import androidx.camera.core.ImageProxy
+import androidx.camera.view.PreviewView
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -48,6 +49,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private lateinit var camera: Camera
+
+    private var isPlaying: Boolean = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,16 +78,11 @@ class MainActivity : AppCompatActivity() {
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
         seekBar.progress = 0
 
-        imageView = findViewById(R.id.pausepreviewImageView) // 画像表示用のImageViewを初期化
-
-        // ImageCapture を初期化
-
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .build()
-
-        startCamera()
-
+        imageView = findViewById(R.id.pauseImageView)
+        // 再生/停止ボタン
+        viewBinding.Button.setOnClickListener {
+            togglePlayPause()
+        }
 
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -110,31 +108,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun captureVideo() {}
 
-
-    fun pausePreview(view: View) {
-        // プレビュー画面をキャプチャして画像として表示
-        imageCapture?.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
-            override fun onCaptureSuccess(image: ImageProxy) {
-                val buffer: ByteBuffer? = image.planes[0].buffer
-                val bytes = ByteArray(buffer?.remaining() ?: 0)
-                buffer?.get(bytes)
-
-                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                imageView.setImageBitmap(bitmap)
-
-                // 画像を解放する
-                image.close()
-            }
-
-            override fun onError(exception: ImageCaptureException) {
-                Log.e(TAG, "Capture failed: ${exception.message}", exception)
-            }
-        })
+    private fun togglePlayPause() {
+        isPlaying = !isPlaying
+        if (isPlaying) {
+            viewBinding.Button.text = "一時停止"
+            startPreview()
+        } else {
+            viewBinding.Button.text = "再開"
+            stopPreview()
+        }
     }
 
+    private fun startPreview() {
 
-    fun resumePreview() {
-        startCamera()
+        val preview = findViewById<PreviewView>(R.id.viewFinder)
+        imageView.setImageBitmap(preview.bitmap)
+
+        preview.visibility = View.VISIBLE
+        imageView.visibility = View.GONE
+
+
+    }
+
+    private fun stopPreview() {
+        val preview = findViewById<PreviewView>(R.id.viewFinder)
+
+        preview.visibility = View.GONE
+        imageView.visibility = View.VISIBLE
+
     }
 
     private fun startCamera() {
@@ -177,22 +178,6 @@ class MainActivity : AppCompatActivity() {
             .also {
                 it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
             }
-/*
-//imageviewの初期化
-        imageView = findViewById(R.id.pausepreviewImageView)
-        // ImageCapture を初期化
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .build()
-
-// カメラと ImageCapture をバインド
-        imageCapture?.let { imageCapture ->
-            cameraProvider.bindToLifecycle(
-                this, cameraSelector, preview, imageCapture
-            )
-
-        }
-*/
 
 
         // プレビュー画面を拡大する関数
