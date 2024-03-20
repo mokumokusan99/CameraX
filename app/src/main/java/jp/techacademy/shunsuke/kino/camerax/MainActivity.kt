@@ -1,11 +1,10 @@
 package jp.techacademy.shunsuke.kino.camerax
 
 import android.Manifest
-import android.content.ContentValues
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
@@ -22,18 +21,8 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
 import androidx.camera.core.*
-import androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
-import androidx.camera.video.FallbackStrategy
-import androidx.camera.video.MediaStoreOutputOptions
-import androidx.camera.video.Quality
-import androidx.camera.video.QualitySelector
-import androidx.camera.video.VideoRecordEvent
-import androidx.camera.view.PreviewView
-import androidx.core.content.PermissionChecker
-import androidx.lifecycle.LifecycleOwner
 import java.nio.ByteBuffer
-import java.text.SimpleDateFormat
-import java.util.Locale
+import androidx.camera.core.ImageProxy
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -52,6 +41,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraProvider: ProcessCameraProvider
 
     private var torchState = TorchState.OFF
+
+    private lateinit var imageView: ImageView // 画像表示用のImageViewを追加
 
   //  private var cameraControl: CameraControl? = null
 
@@ -84,6 +75,17 @@ class MainActivity : AppCompatActivity() {
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
         seekBar.progress = 0
 
+        imageView = findViewById(R.id.pausepreviewImageView) // 画像表示用のImageViewを初期化
+
+        // ImageCapture を初期化
+
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .build()
+
+        startCamera()
+
+
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
@@ -107,6 +109,33 @@ class MainActivity : AppCompatActivity() {
     private fun takePhoto() {}
 
     private fun captureVideo() {}
+
+
+    fun pausePreview(view: View) {
+        // プレビュー画面をキャプチャして画像として表示
+        imageCapture?.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
+            override fun onCaptureSuccess(image: ImageProxy) {
+                val buffer: ByteBuffer? = image.planes[0].buffer
+                val bytes = ByteArray(buffer?.remaining() ?: 0)
+                buffer?.get(bytes)
+
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                imageView.setImageBitmap(bitmap)
+
+                // 画像を解放する
+                image.close()
+            }
+
+            override fun onError(exception: ImageCaptureException) {
+                Log.e(TAG, "Capture failed: ${exception.message}", exception)
+            }
+        })
+    }
+
+
+    fun resumePreview() {
+        startCamera()
+    }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -140,6 +169,32 @@ class MainActivity : AppCompatActivity() {
 
         }, ContextCompat.getMainExecutor(this))
 
+        // Select back camera as a default
+        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+        val preview = Preview.Builder()
+            .build()
+            .also {
+                it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
+            }
+/*
+//imageviewの初期化
+        imageView = findViewById(R.id.pausepreviewImageView)
+        // ImageCapture を初期化
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .build()
+
+// カメラと ImageCapture をバインド
+        imageCapture?.let { imageCapture ->
+            cameraProvider.bindToLifecycle(
+                this, cameraSelector, preview, imageCapture
+            )
+
+        }
+*/
+
+
         // プレビュー画面を拡大する関数
         fun zoomInPreview(scaleFactor: Float) {
             viewBinding.viewFinder.scaleX = scaleFactor
@@ -153,11 +208,14 @@ class MainActivity : AppCompatActivity() {
                 // プレビュー画面を拡大する処理
                 val scale = 1.0f + progress / 100.0f // 拡大倍率
                 zoomInPreview(scale)
+
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+
+
 
     }
 
@@ -169,11 +227,10 @@ class MainActivity : AppCompatActivity() {
 
     // Toggle torch state
     fun toggleTorch(view: View) {
+        //val currentTorchState = camera.cameraInfo.torchState.value ?: TorchState.OFF //こちらで記述した場合、OFFの時画像が切り替わらない
         val currentTorchState = torchState ?: TorchState.OFF
         val newTorchState = if (currentTorchState == TorchState.OFF) TorchState.ON else TorchState.OFF
         camera.cameraControl.enableTorch(newTorchState == TorchState.ON)
-
-
 
         if (newTorchState == TorchState.OFF) {
             torchButton.setImageResource(R.drawable.baseline_flashlight_off_24) // OFFのアイコン
@@ -181,9 +238,8 @@ class MainActivity : AppCompatActivity() {
             torchButton.setImageResource(R.drawable.baseline_flashlight_on_24) // ONのアイコン
         }
         torchState = newTorchState
+
     }
-
-
 
 
     override fun onDestroy() {

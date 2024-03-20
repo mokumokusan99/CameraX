@@ -4,8 +4,8 @@
     <size
         android:width="30dp"
         android:height="30dp"/>
-    <solid android:color="#FFFF00"/> <!-- Yellow color -->
+    <solid android:color="#00E5FF"/> <!-- color -->
     <stroke
-        android:width="4dp"
+        android:width="3dp"
         android:color="#000000"/> <!-- Black border -->
 </shape>

@@ -14,22 +14,45 @@
 
     </androidx.camera.view.PreviewView>
 
+
+    <ImageView
+        android:id="@+id/pausepreviewImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        tools:visibility="visible" />
+
     <ImageView
         android:id="@+id/torchButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_marginTop="670dp"
         android:onClick="toggleTorch"
         android:src="@drawable/baseline_flashlight_off_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:tint="@android:color/holo_orange_light"
         tools:ignore="ContentDescription,ImageContrastCheck" />
+
+    <Button
+        android:id="@+id/pauseButton"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="670dp"
+        android:onClick="pausePreview"
+        android:text="一時停止"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription,MissingConstraints" />
 
     <ImageView
         android:id="@+id/reductionImageView"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="550dp"
+        android:layout_marginTop="560dp"
         android:background="#DDDDDD"
         android:src="@drawable/baseline_remove_24"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -44,12 +67,12 @@
         android:id = "@+id/seekBar"
         android:layout_width="300dp"
         android:layout_height="50dp"
-        android:layout_marginTop="610dp"
+        android:layout_marginTop="560dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         android:max = "100"
         android:progress = "0"
         android:background="#DDDDDD"
         android:thumb="@drawable/thumb"
-        app:layout_constraintBottom_toTopOf="@+id/torchButton"
         app:layout_constraintEnd_toStartOf="@+id/expansionImageView"
         app:layout_constraintStart_toEndOf="@+id/reductionImageView"
         app:layout_constraintTop_toTopOf="@+id/viewFinder"
@@ -59,7 +82,7 @@
         android:id="@+id/expansionImageView"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="550dp"
+        android:layout_marginTop="560dp"
         android:background="#DDDDDD"
         android:src="@drawable/baseline_add_24"
         app:layout_constraintBottom_toBottomOf="parent"
