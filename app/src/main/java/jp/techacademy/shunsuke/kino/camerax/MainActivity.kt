@@ -2,6 +2,7 @@ package jp.techacademy.shunsuke.kino.camerax
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
@@ -129,13 +130,26 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
     private fun stopPreview() {
         val preview = findViewById<PreviewView>(R.id.viewFinder)
-        imageView.setImageBitmap(preview.bitmap)
+
+        val original = preview.bitmap?: return
+        val scaled = getscaledBitmap(original)
+        imageView.setImageBitmap(scaled)
+        imageView.scaleType = ImageView.ScaleType.CENTER
 
         preview.visibility = View.GONE
         imageView.visibility = View.VISIBLE
 
+    }
+
+    private fun getscaledBitmap(bitmap: Bitmap): Bitmap{
+        val seekBar = findViewById<SeekBar>(R.id.seekBar)
+        val scale = 1.0f + seekBar.progress / 100.0f // 拡大倍率
+        val width = bitmap.width * scale
+        val height = bitmap.height * scale
+        return Bitmap.createScaledBitmap(bitmap, width.toInt(), height.toInt(), true)
     }
 
     private fun startCamera() {
