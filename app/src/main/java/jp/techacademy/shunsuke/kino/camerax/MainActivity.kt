@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getscaledBitmap(bitmap: Bitmap): Bitmap{
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
-        val scale = 1.0f + seekBar.progress / 100.0f // 拡大倍率
+        val scale = 1.0f + seekBar.progress / 200.0f // 拡大倍率
         val width = bitmap.width * scale
         val height = bitmap.height * scale
         return Bitmap.createScaledBitmap(bitmap, width.toInt(), height.toInt(), true)
