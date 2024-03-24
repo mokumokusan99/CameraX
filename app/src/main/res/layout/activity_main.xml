@@ -45,11 +45,10 @@
         android:id="@+id/reductionImageView"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:background="#DDDDDD"
+        android:background="#B3DDDDDD"
         android:src="@drawable/baseline_remove_24"
         app:layout_constraintBottom_toTopOf="@+id/Button"
         app:layout_constraintStart_toStartOf="parent"
-        app:tint="@android:color/black"
         tools:ignore="ContentDescription,MissingConstraints" />
 
 
@@ -60,7 +59,7 @@
         app:layout_constraintBottom_toTopOf="@+id/Button"
         android:max = "100"
         android:progress = "0"
-        android:background="#DDDDDD"
+        android:background="#B3DDDDDD"
         android:thumb="@drawable/baseline_zoom_in_24"
         app:layout_constraintEnd_toStartOf="@+id/expansionImageView"
         app:layout_constraintStart_toEndOf="@+id/reductionImageView"
@@ -70,11 +69,10 @@
         android:id="@+id/expansionImageView"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:background="#DDDDDD"
+        android:background="#B3DDDDDD"
         android:src="@drawable/baseline_add_24"
         app:layout_constraintBottom_toTopOf="@+id/Button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:tint="@android:color/black"
         tools:ignore="ContentDescription,ImageContrastCheck,MissingConstraints" />
 
     <androidx.constraintlayout.widget.Guideline
